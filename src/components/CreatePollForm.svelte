@@ -1,8 +1,48 @@
 <script>
+  import PollStore from "../stores/PollStore.js";
+  import { createEventDispatcher } from "svelte";
+
   import Button from "../shared/Button.svelte";
+  let dispatch = createEventDispatcher();
   let fields = { question: "", answerA: "", answerB: "" };
-  const submiteHandler = () => {
-    console.log(fields);
+  let errors = { question: "", answerA: "", answerB: "" };
+  let valid = false;
+
+  const submitHandler = () => {
+    valid = true;
+
+    //validation question
+    if (fields.question.trim().length < 5) {
+      valid = false;
+      errors.question = "Question must be atleast 5 Chars Long";
+    } else {
+      errors.question = "";
+    }
+
+    //validate answr A
+    if (fields.answerA.trim().length < 1) {
+      valid = false;
+      errors.answerA = "Answer A cannot be empty";
+    } else {
+      errors.answerA = "";
+    }
+    //valaidate answert b
+    if (fields.answerB.trim().length < 1) {
+      valid = false;
+      errors.answerB = "Answer B cannot be empty";
+    } else {
+      errors.answerB = "";
+    }
+
+    //add new poll
+    if (valid) {
+      let poll = { ...fields, votesA: 0, votesB: 0, id: Math.random() }; ///not the best way to get a random number, use external lib
+      //save Poll to store
+      PollStore.update(currentPolls => {
+        return [poll, ...currentPolls];
+      });
+      dispatch("add");
+    }
   };
 </script>
 
@@ -23,21 +63,29 @@
     margin: 10px auto;
     text-align: left;
   }
+  .error {
+    font-weight: 10px auto;
+    font-size: 12px;
+    color: #d91942;
+  }
 </style>
 
-<form on:submit|preventDefault={submiteHandler}>
+<form on:submit|preventDefault={submitHandler}>
 
   <div class="form-field">
     <label for="question">Poll question:</label>
     <input type="text" id="question" bind:value={fields.question} />
+    <div class="error">{errors.question}</div>
   </div>
   <div class="form-field">
     <label for="answer-a">Answer A:</label>
     <input type="text" id="answer-a" bind:value={fields.answerA} />
+    <div class="error">{errors.answerA}</div>
   </div>
   <div class="form-field">
     <label for="answer-b">Answer B:</label>
     <input type="text" id="answer b" bind:value={fields.answerB} />
+    <div class="error">{errors.answerB}</div>
   </div>
   <Button type="secondary" flat={true}>Add Poll</Button>
 </form>
